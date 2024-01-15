@@ -1,5 +1,5 @@
 CONTACTS = {}
-
+NOT_FOUND_ERROR = "Contact not found."
 
 def input_error(func):
     def inner(*args, **kwargs):
@@ -7,7 +7,7 @@ def input_error(func):
             try:
                 result = func(*args, **kwargs)
                 return result
-            except (KeyError, TypeError, ValueError):
+            except (KeyError, TypeError, ValueError, IndexError):
                 return "Incorrect value. Please, try again."
 
     return inner
@@ -23,22 +23,22 @@ def hello():
 
 @input_error
 def add(name, phone):
-    if not CONTACTS.get(name):
+    if name not in CONTACTS:
         CONTACTS[name] = phone
-        return "Thank you!"
+        return "Contact added successfully!"
     return "Contact with such name already exists."
 
 @input_error
 def change(name, phone):
-    if CONTACTS[name]:
+    if name in CONTACTS:
         CONTACTS[name] = phone
-        return "Thank you!"
-    return ""
+        return "Contact updated successfully!"
+    return NOT_FOUND_ERROR
 
 
 @input_error
 def phone(name):
-    return CONTACTS[name]
+    return CONTACTS.get(name, NOT_FOUND_ERROR)
 
 @input_error
 def show_all():
