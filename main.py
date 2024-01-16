@@ -1,6 +1,7 @@
 CONTACTS = {}
 NOT_FOUND_ERROR = "Contact not found."
 
+
 def input_error(func):
     def inner(*args, **kwargs):
         while True:
@@ -16,6 +17,7 @@ def input_error(func):
 def handler(action):
     return ACTIONS[action]
 
+
 @input_error
 def hello():
     return "How can I help you?"
@@ -27,6 +29,7 @@ def add(name, phone):
         CONTACTS[name] = phone
         return "Contact added successfully!"
     return "Contact with such name already exists."
+
 
 @input_error
 def change(name, phone):
@@ -40,13 +43,14 @@ def change(name, phone):
 def phone(name):
     return CONTACTS.get(name, NOT_FOUND_ERROR)
 
+
 @input_error
 def show_all():
     if len(CONTACTS) > 0:
-        for k, v in CONTACTS.items():
-            return f"{k}: {v}"
+        return "\n".join([f"{k}: {v}" for k, v in CONTACTS.items()])
+    elif len(CONTACTS) == 0:
+        return "Contacts library is empty"
 
-    return "Empty contacts library."
 
 
 ACTIONS = {
@@ -54,35 +58,46 @@ ACTIONS = {
     "add": add,
     "change": change,
     "phone": phone,
-    "show": show_all
+    "show all": show_all
 }
+
 
 def main():
     while True:
-        customer_input = input().split()
-        action = customer_input[0].lower()
+        try:
+            customer_input = input().split()
+            action = customer_input.pop(0).lower()
+            full_action = ""
 
-        if action in ("add", "change"):
-            name, phone = customer_input[-2:]
-            result = handler(action)
-            print(result(name, phone))
+            if action in ("add", "change"):
+                name, phone = customer_input
+                result = handler(action)
+                print(result(name, phone))
 
-        elif action in ("phone"):
-            name = customer_input[-1]
-            result = handler(action)
-            print(result(name))
+            elif action in ("phone"):
+                name = customer_input[0]
+                result = handler(action)
+                print(result(name))
 
-        elif action == "hello" or (action == "show" and customer_input[1].lower() == "all"):
-            result = handler(action)
-            print(result())
+            elif action == "hello":
+                result = handler(action)
+                print(result())
 
-        elif action in ("close", "exit", ".") or \
-                (action == "good" and customer_input[1].lower() == "bye"):
-            print("Good bye!")
-            break
+            elif (action == "show" and customer_input[0].lower() == "all"):
+                full_action = f"{action.lower()} {customer_input[0].lower()}"
+                result = handler(full_action)
+                print(result())
 
-        if action not in ACTIONS:
-            print("Unknown action. Please, try again.")
+            elif action in ("close", "exit", ".") or \
+                    (action == "good" and customer_input[0].lower() == "bye"):
+                print("Good bye!")
+                break
+
+            elif full_action or action not in ACTIONS:
+                print("Unknown action. Please, try again.")
+
+        except (IndexError, ValueError, KeyError):
+            print("Error occurred. Try again.")
 
 
 if __name__ == '__main__':
