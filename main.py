@@ -1,3 +1,4 @@
+
 CONTACTS = {}
 NOT_FOUND_ERROR = "Contact not found."
 
@@ -52,7 +53,6 @@ def show_all():
         return "Contacts library is empty"
 
 
-
 ACTIONS = {
     "hello": hello,
     "add": add,
@@ -83,7 +83,7 @@ def main():
                 result = handler(action)
                 print(result())
 
-            elif (action == "show" and customer_input[0].lower() == "all"):
+            elif action == "show" and customer_input[0].lower() == "all":
                 full_action = f"{action.lower()} {customer_input[0].lower()}"
                 result = handler(full_action)
                 print(result())
