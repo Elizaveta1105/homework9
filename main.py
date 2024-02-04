@@ -1,103 +1,116 @@
+from types import FunctionType
 
 CONTACTS = {}
-NOT_FOUND_ERROR = "Contact not found."
+
+help = '''
+You can use these commands
+hello
+add <name> <phone>
+change <name> <phone>
+phone <name>
+show all
+close
+exit'''
 
 
 def input_error(func):
     def inner(*args, **kwargs):
-        while True:
-            try:
-                result = func(*args, **kwargs)
-                return result
-            except (KeyError, TypeError, ValueError, IndexError):
-                return "Incorrect value. Please, try again."
+        try:
+            result = func(*args, **kwargs)
+            return result
+        except IndexError:
+            return help
+        except KeyError:
+            return help
+        except ValueError as error:
+            return "Input the name"
+        except TypeError:
+            return help
 
     return inner
 
 
-def handler(action):
-    return ACTIONS[action]
-
-
 @input_error
-def hello():
+def hello(customer_input):
     return "How can I help you?"
 
 
 @input_error
-def add(name, phone):
+def add(customer_input):
+    action, name, phone = customer_input.split()
     if name not in CONTACTS:
         CONTACTS[name] = phone
         return "Contact added successfully!"
-    return "Contact with such name already exists."
+    raise TypeError("Contact already exists")
 
 
 @input_error
-def change(name, phone):
+def change(customer_input):
+    action, name, phone = customer_input.split()
     if name in CONTACTS:
         CONTACTS[name] = phone
         return "Contact updated successfully!"
-    return NOT_FOUND_ERROR
+    raise TypeError("Contact already exists")
 
 
 @input_error
-def phone(name):
-    return CONTACTS.get(name, NOT_FOUND_ERROR)
+def get_phone(customer_input):
+    action, name = customer_input.split()
+    try:
+        result = CONTACTS[name]
+    except:
+        raise TypeError("Contact not found")
+
+    return f'{name}: {result}'
 
 
 @input_error
-def show_all():
-    if len(CONTACTS) > 0:
-        return "\n".join([f"{k}: {v}" for k, v in CONTACTS.items()])
-    elif len(CONTACTS) == 0:
+def show_all(customer_input):
+    if customer_input != "show all":
+        raise KeyError
+
+    if len(CONTACTS) == 0:
         return "Contacts library is empty"
+
+    return "\n".join([f"{k}: {v}" for k, v in CONTACTS.items()])
+
+
+def bye(customer_input):
+    if customer_input in ("good bye", "exit", "close"):
+        return "Good bye"
+    raise KeyError
 
 
 ACTIONS = {
     "hello": hello,
     "add": add,
     "change": change,
-    "phone": phone,
-    "show all": show_all
+    "phone": get_phone,
+    "show": show_all,
+    "exit": bye,
+    "close": bye,
+    "good": bye
 }
+
+
+@input_error
+def get_action(customer_input):
+    action = customer_input.split()[0]
+    return ACTIONS[action]
 
 
 def main():
     while True:
-        try:
-            customer_input = input().split()
-            action = customer_input.pop(0).lower()
-            full_action = ""
+        customer_input = input(">>>").lower().strip()
+        function = get_action(customer_input)
+        if not isinstance(function, FunctionType):
+            print(function)
+            continue
+        result = function(customer_input)
+        print(result)
 
-            if action in ("add", "change"):
-                name, phone = customer_input
-                result = handler(action)
-                print(result(name, phone))
-
-            elif action in ("phone"):
-                name = customer_input[0]
-                result = handler(action)
-                print(result(name))
-
-            elif action == "hello":
-                result = handler(action)
-                print(result())
-
-            elif action == "show" and customer_input[0].lower() == "all":
-                full_action = f"{action.lower()} {customer_input[0].lower()}"
-                result = handler(full_action)
-                print(result())
-
-            elif action in ("close", "exit", ".") or \
-                    (action == "good" and customer_input[0].lower() == "bye"):
-                print("Good bye!")
-                break
-
-            elif full_action or action not in ACTIONS:
-                print("Unknown action. Please, try again.")
-
-        except (IndexError, ValueError, KeyError):
-            print("Error occurred. Try again.")
+        if result == "Good bye!":
+            break
 
 
 if __name__ == '__main__':
